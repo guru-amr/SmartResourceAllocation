@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusAlloc | Smart Resource Allocation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <nav>
+        <div class="logo">
+            <span class="nexus">Nexus</span><span class="alloc">Alloc</span>
+        </div>
+        <div class="status">
+            <div class="indicator online"></div>
+            <span>System Active</span>
+        </div>
+    </nav>
+
+    <main>
+        <header>
+            <h1>Resource Allocation Framework</h1>
+            <p>Integrating OS, DBMS, and ML for optimal system performance.</p>
+        </header>
+
+        <section class="dashboard-grid">
+            <!-- Resource Cards -->
+            <div class="card glass">
+                <h3>System Available</h3>
+                <div class="resource-meters">
+                    <div class="meter-box">
+                        <label>CPU</label>
+                        <div class="meter"><div class="fill" id="cpu-fill" style="width: 70%"></div></div>
+                        <span id="cpu-val">10</span>
+                    </div>
+                    <div class="meter-box">
+                        <label>RAM</label>
+                        <div class="meter"><div class="fill" id="ram-fill" style="width: 50%"></div></div>
+                        <span id="ram-val">5</span>
+                    </div>
+                    <div class="meter-box">
+                        <label>Disk</label>
+                        <div class="meter"><div class="fill" id="disk-fill" style="width: 80%"></div></div>
+                        <span id="disk-val">7</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allocation Table -->
+            <div class="card glass wide">
+                <h3>Process Status & Allocation</h3>
+                <div class="table-container">
+                    <table id="process-table">
+                        <thead>
+                            <tr>
+                                <th>Process ID</th>
+                                <th>Max Need</th>
+                                <th>Allocation</th>
+                                <th>Remaining Need</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ML Insights -->
+            <div class="card glass">
+                <h3>ML Demand Prediction</h3>
+                <canvas id="predictionChart"></canvas>
+                <div class="prediction-info">
+                    <p>Next predicted spike: <strong id="pred-val">Calculating...</strong></p>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="card glass control-card">
+                <h3>Request Simulator</h3>
+                <div class="form-group">
+                    <label>Process ID</label>
+                    <input type="number" id="req-pid" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label>Resource Request (C, R, D)</label>
+                    <div class="input-row">
+                        <input type="number" id="req-c" placeholder="C">
+                        <input type="number" id="req-r" placeholder="R">
+                        <input type="number" id="req-d" placeholder="D">
+                    </div>
+                </div>
+                <button id="btn-request" class="btn-primary">Execute Allocation</button>
+                <p id="log-msg" class="log"></p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="glass">
+        <p>&copy; 2026 NexusAlloc Framework. Powered by Advanced OS Algorithms.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
