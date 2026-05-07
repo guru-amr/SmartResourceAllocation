@@ -3,112 +3,463 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexusAlloc | Smart Resource Allocation</title>
+    <title>NexusAlloc | Smart Resource Allocation Framework</title>
+    <meta name="description" content="NexusAlloc - Intelligent resource allocation using Banker's Algorithm, ML prediction, and real-time deadlock avoidance.">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
+    <!-- Animated Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Background Blobs -->
     <div class="background-blobs">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
     </div>
 
-    <nav>
-        <div class="logo">
-            <span class="nexus">Nexus</span><span class="alloc">Alloc</span>
+    <!-- Toast Container -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- Navbar -->
+    <nav id="navbar">
+        <div class="nav-left">
+            <div class="logo-icon">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="14" stroke="url(#g1)" stroke-width="2"/>
+                    <path d="M10 16L14 20L22 12" stroke="url(#g2)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <defs>
+                        <linearGradient id="g1" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+                        <linearGradient id="g2" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#6366f1"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="logo">
+                <span class="nexus">Nexus</span><span class="alloc">Alloc</span>
+            </div>
         </div>
-        <div class="status">
-            <div class="indicator online"></div>
-            <span>System Active</span>
+        <div class="nav-center">
+            <nav class="tab-nav" role="navigation" aria-label="Dashboard sections">
+                <button class="tab-btn active" id="tab-dashboard" data-tab="dashboard">
+                    <span class="tab-icon">◈</span> Dashboard
+                </button>
+                <button class="tab-btn" id="tab-banker" data-tab="banker">
+                    <span class="tab-icon">⬡</span> Banker's Algorithm
+                </button>
+                <button class="tab-btn" id="tab-ml" data-tab="ml">
+                    <span class="tab-icon">◎</span> ML Insights
+                </button>
+                <button class="tab-btn" id="tab-logs" data-tab="logs">
+                    <span class="tab-icon">≡</span> Activity Log
+                </button>
+            </nav>
+        </div>
+        <div class="nav-right">
+            <div class="status-pill" id="server-status">
+                <div class="indicator" id="status-dot"></div>
+                <span id="status-text">Connecting...</span>
+            </div>
+            <button class="btn-icon" id="btn-refresh" title="Refresh State">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+            </button>
         </div>
     </nav>
 
+    <!-- Main Content -->
     <main>
-        <header>
-            <h1>Resource Allocation Framework</h1>
-            <p>Integrating OS, DBMS, and ML for optimal system performance.</p>
-        </header>
 
-        <section class="dashboard-grid">
-            <!-- Resource Cards -->
-            <div class="card glass">
-                <h3>System Available</h3>
-                <div class="resource-meters">
-                    <div class="meter-box">
-                        <label>CPU</label>
-                        <div class="meter"><div class="fill" id="cpu-fill" style="width: 70%"></div></div>
-                        <span id="cpu-val">10</span>
+        <!-- ==================== DASHBOARD TAB ==================== -->
+        <section class="tab-panel active" id="panel-dashboard">
+            <div class="section-header">
+                <div>
+                    <h1 class="gradient-text">Resource Allocation Dashboard</h1>
+                    <p class="subtitle">Real-time OS resource monitoring with intelligent deadlock avoidance</p>
+                </div>
+                <div class="header-stats">
+                    <div class="stat-badge">
+                        <span class="stat-num" id="safe-seq-count">—</span>
+                        <span class="stat-label">Safe Sequence</span>
                     </div>
-                    <div class="meter-box">
-                        <label>RAM</label>
-                        <div class="meter"><div class="fill" id="ram-fill" style="width: 50%"></div></div>
-                        <span id="ram-val">5</span>
+                    <div class="stat-badge">
+                        <span class="stat-num" id="active-procs">5</span>
+                        <span class="stat-label">Processes</span>
                     </div>
-                    <div class="meter-box">
-                        <label>Disk</label>
-                        <div class="meter"><div class="fill" id="disk-fill" style="width: 80%"></div></div>
-                        <span id="disk-val">7</span>
+                    <div class="stat-badge">
+                        <span class="stat-num">3</span>
+                        <span class="stat-label">Resources</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Allocation Table -->
-            <div class="card glass wide">
-                <h3>Process Status & Allocation</h3>
-                <div class="table-container">
-                    <table id="process-table">
-                        <thead>
-                            <tr>
-                                <th>Process ID</th>
-                                <th>Max Need</th>
-                                <th>Allocation</th>
-                                <th>Remaining Need</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- ML Insights -->
-            <div class="card glass">
-                <h3>ML Demand Prediction</h3>
-                <canvas id="predictionChart"></canvas>
-                <div class="prediction-info">
-                    <p>Next predicted spike: <strong id="pred-val">Calculating...</strong></p>
-                </div>
-            </div>
-
-            <!-- Controls -->
-            <div class="card glass control-card">
-                <h3>Request Simulator</h3>
-                <div class="form-group">
-                    <label>Process ID</label>
-                    <input type="number" id="req-pid" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <label>Resource Request (C, R, D)</label>
-                    <div class="input-row">
-                        <input type="number" id="req-c" placeholder="C">
-                        <input type="number" id="req-r" placeholder="R">
-                        <input type="number" id="req-d" placeholder="D">
+            <div class="dashboard-grid">
+                <!-- Resource Rings Card -->
+                <div class="card glass" id="card-resources">
+                    <div class="card-header">
+                        <h3>System Resources</h3>
+                        <span class="card-badge">Available</span>
+                    </div>
+                    <div class="resource-rings">
+                        <div class="ring-item">
+                            <div class="ring-wrapper">
+                                <svg class="ring-svg" viewBox="0 0 80 80">
+                                    <circle class="ring-track" cx="40" cy="40" r="34" />
+                                    <circle class="ring-fill cpu-ring" id="svg-cpu" cx="40" cy="40" r="34" />
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-val" id="cpu-val">—</span>
+                                    <span class="ring-unit">units</span>
+                                </div>
+                            </div>
+                            <div class="ring-label">
+                                <span class="ring-dot cpu-dot"></span> CPU
+                            </div>
+                        </div>
+                        <div class="ring-item">
+                            <div class="ring-wrapper">
+                                <svg class="ring-svg" viewBox="0 0 80 80">
+                                    <circle class="ring-track" cx="40" cy="40" r="34" />
+                                    <circle class="ring-fill ram-ring" id="svg-ram" cx="40" cy="40" r="34" />
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-val" id="ram-val">—</span>
+                                    <span class="ring-unit">units</span>
+                                </div>
+                            </div>
+                            <div class="ring-label">
+                                <span class="ring-dot ram-dot"></span> RAM
+                            </div>
+                        </div>
+                        <div class="ring-item">
+                            <div class="ring-wrapper">
+                                <svg class="ring-svg" viewBox="0 0 80 80">
+                                    <circle class="ring-track" cx="40" cy="40" r="34" />
+                                    <circle class="ring-fill disk-ring" id="svg-disk" cx="40" cy="40" r="34" />
+                                </svg>
+                                <div class="ring-center">
+                                    <span class="ring-val" id="disk-val">—</span>
+                                    <span class="ring-unit">units</span>
+                                </div>
+                            </div>
+                            <div class="ring-label">
+                                <span class="ring-dot disk-dot"></span> Disk
+                            </div>
+                        </div>
+                    </div>
+                    <div class="resource-bars">
+                        <div class="bar-row">
+                            <span>CPU</span>
+                            <div class="bar-track">
+                                <div class="bar-fill cpu-bar" id="cpu-bar"></div>
+                            </div>
+                            <span class="bar-pct" id="cpu-pct">0%</span>
+                        </div>
+                        <div class="bar-row">
+                            <span>RAM</span>
+                            <div class="bar-track">
+                                <div class="bar-fill ram-bar" id="ram-bar"></div>
+                            </div>
+                            <span class="bar-pct" id="ram-pct">0%</span>
+                        </div>
+                        <div class="bar-row">
+                            <span>Disk</span>
+                            <div class="bar-track">
+                                <div class="bar-fill disk-bar" id="disk-bar"></div>
+                            </div>
+                            <span class="bar-pct" id="disk-pct">0%</span>
+                        </div>
                     </div>
                 </div>
-                <button id="btn-request" class="btn-primary">Execute Allocation</button>
-                <p id="log-msg" class="log"></p>
+
+                <!-- Quick Predictor -->
+                <div class="card glass" id="card-mini-ml">
+                    <div class="card-header">
+                        <h3>ML Demand Forecast</h3>
+                        <span class="card-badge accent">Live</span>
+                    </div>
+                    <canvas id="miniChart" style="max-height:180px"></canvas>
+                    <div class="prediction-banner" id="pred-banner">
+                        <div class="pred-icon">⚡</div>
+                        <div class="pred-info">
+                            <div class="pred-label">Next Predicted Spike</div>
+                            <div class="pred-value" id="pred-val">Calculating...</div>
+                        </div>
+                        <div class="pred-model" id="pred-model-badge">Python ML</div>
+                    </div>
+                </div>
+
+                <!-- Process Table -->
+                <div class="card glass wide" id="card-processes">
+                    <div class="card-header">
+                        <h3>Process Allocation Matrix</h3>
+                        <div class="card-header-right">
+                            <span class="safe-badge" id="safe-badge">Checking Safety...</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="process-table" aria-label="Process Allocation Table">
+                            <thead>
+                                <tr>
+                                    <th>Process</th>
+                                    <th>Max Need <small>(C/R/D)</small></th>
+                                    <th>Allocated <small>(C/R/D)</small></th>
+                                    <th>Remaining Need <small>(C/R/D)</small></th>
+                                    <th>Safety</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="process-tbody">
+                                <tr class="loading-row">
+                                    <td colspan="6">
+                                        <div class="loader-dots"><span></span><span></span><span></span></div>
+                                        Loading process state...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Request Simulator -->
+                <div class="card glass" id="card-simulator">
+                    <div class="card-header">
+                        <h3>Request Simulator</h3>
+                        <span class="card-badge warning">Banker's Guard</span>
+                    </div>
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label for="req-pid">Process ID</label>
+                            <div class="input-wrapper">
+                                <span class="input-prefix">P</span>
+                                <input type="number" id="req-pid" placeholder="0" min="0" max="4">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Resource Request (CPU / RAM / Disk)</label>
+                            <div class="input-row">
+                                <div class="input-labeled">
+                                    <input type="number" id="req-c" placeholder="0" min="0">
+                                    <span>CPU</span>
+                                </div>
+                                <div class="input-labeled">
+                                    <input type="number" id="req-r" placeholder="0" min="0">
+                                    <span>RAM</span>
+                                </div>
+                                <div class="input-labeled">
+                                    <input type="number" id="req-d" placeholder="0" min="0">
+                                    <span>Disk</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="btn-request" class="btn-primary">
+                            <span class="btn-icon-inner">▶</span>
+                            Execute Allocation
+                        </button>
+                        <div class="log-box" id="log-box">
+                            <div class="log-placeholder">Results will appear here after execution.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Safe Sequence Visualizer -->
+                <div class="card glass" id="card-sequence">
+                    <div class="card-header">
+                        <h3>Safe Sequence</h3>
+                        <span class="card-badge success">Deadlock-Free</span>
+                    </div>
+                    <div class="sequence-display" id="seq-display">
+                        <div class="seq-empty">
+                            Run a request to compute the safe sequence.
+                        </div>
+                    </div>
+                    <div class="sequence-info" id="seq-info"></div>
+                </div>
             </div>
         </section>
+
+        <!-- ==================== BANKER'S ALGORITHM TAB ==================== -->
+        <section class="tab-panel" id="panel-banker">
+            <div class="section-header">
+                <div>
+                    <h1 class="gradient-text">Banker's Algorithm Visualizer</h1>
+                    <p class="subtitle">Step-by-step deadlock avoidance with safety state analysis</p>
+                </div>
+            </div>
+
+            <div class="banker-layout">
+                <!-- State Tables -->
+                <div class="card glass banker-left">
+                    <div class="card-header">
+                        <h3>System State Matrices</h3>
+                    </div>
+                    <div class="matrix-section">
+                        <div class="matrix-title">Available Resources</div>
+                        <div class="avail-row" id="avail-row">—</div>
+                    </div>
+                    <div class="matrix-section">
+                        <div class="matrix-title">Allocation Matrix</div>
+                        <table class="matrix-table" id="alloc-table">
+                            <thead><tr><th>P</th><th>CPU</th><th>RAM</th><th>Disk</th></tr></thead>
+                            <tbody id="alloc-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="matrix-section">
+                        <div class="matrix-title">Max Need Matrix</div>
+                        <table class="matrix-table" id="max-table">
+                            <thead><tr><th>P</th><th>CPU</th><th>RAM</th><th>Disk</th></tr></thead>
+                            <tbody id="max-tbody"></tbody>
+                        </table>
+                    </div>
+                    <div class="matrix-section">
+                        <div class="matrix-title">Need Matrix (Max − Allocated)</div>
+                        <table class="matrix-table" id="need-table">
+                            <thead><tr><th>P</th><th>CPU</th><th>RAM</th><th>Disk</th></tr></thead>
+                            <tbody id="need-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Algorithm Steps -->
+                <div class="card glass banker-right">
+                    <div class="card-header">
+                        <h3>Safety Algorithm Trace</h3>
+                        <button class="btn-sm" id="btn-run-safety">Run Safety Check</button>
+                    </div>
+                    <div class="safety-result" id="safety-result">
+                        <div class="safety-idle">Click "Run Safety Check" to trace the algorithm step by step.</div>
+                    </div>
+                    <div class="steps-container" id="steps-container"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ML INSIGHTS TAB ==================== -->
+        <section class="tab-panel" id="panel-ml">
+            <div class="section-header">
+                <div>
+                    <h1 class="gradient-text">ML Demand Prediction Engine</h1>
+                    <p class="subtitle">Scikit-Learn powered resource demand forecasting with linear regression</p>
+                </div>
+            </div>
+
+            <div class="ml-grid">
+                <div class="card glass ml-chart-card">
+                    <div class="card-header">
+                        <h3>Demand Forecast Chart</h3>
+                        <span class="card-badge accent">Python Scikit-Learn</span>
+                    </div>
+                    <canvas id="predictionChart"></canvas>
+                </div>
+
+                <div class="card glass ml-stats-card">
+                    <div class="card-header">
+                        <h3>Prediction Metrics</h3>
+                    </div>
+                    <div class="metrics-list">
+                        <div class="metric-item">
+                            <div class="metric-icon cpu-color">⚡</div>
+                            <div class="metric-info">
+                                <div class="metric-label">Predicted Usage</div>
+                                <div class="metric-value" id="ml-predicted">—</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon accent-color">◎</div>
+                            <div class="metric-info">
+                                <div class="metric-label">Model Engine</div>
+                                <div class="metric-value" id="ml-engine">—</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon success-color">✓</div>
+                            <div class="metric-info">
+                                <div class="metric-label">Trend</div>
+                                <div class="metric-value" id="ml-trend">↑ Increasing</div>
+                            </div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-icon warning-color">▲</div>
+                            <div class="metric-info">
+                                <div class="metric-label">Alert Threshold</div>
+                                <div class="metric-value">20 units</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-header" style="margin-top:1.5rem">
+                        <h3>Historical Data Points</h3>
+                    </div>
+                    <div class="history-list" id="history-list">
+                        <div class="history-item"><span>T-4</span><div class="h-bar" style="width:55%"></div><span>10</span></div>
+                        <div class="history-item"><span>T-3</span><div class="h-bar" style="width:66%"></div><span>12</span></div>
+                        <div class="history-item"><span>T-2</span><div class="h-bar" style="width:83%"></div><span>15</span></div>
+                        <div class="history-item"><span>T-1</span><div class="h-bar" style="width:77%"></div><span>14</span></div>
+                        <div class="history-item"><span>Now</span><div class="h-bar" style="width:100%"></div><span>18</span></div>
+                        <div class="history-item predicted"><span>Next</span><div class="h-bar predicted-bar" id="pred-bar" style="width:0%"></div><span id="pred-num">—</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== ACTIVITY LOG TAB ==================== -->
+        <section class="tab-panel" id="panel-logs">
+            <div class="section-header">
+                <div>
+                    <h1 class="gradient-text">Activity Log</h1>
+                    <p class="subtitle">Real-time audit trail of all allocation requests and system events</p>
+                </div>
+                <button class="btn-outline" id="btn-clear-log">Clear Log</button>
+            </div>
+            <div class="card glass">
+                <div id="activity-log" class="activity-log">
+                    <div class="log-entry system">
+                        <span class="log-time">00:00:00</span>
+                        <span class="log-tag sys-tag">SYSTEM</span>
+                        <span class="log-text">NexusAlloc framework initialized. Connecting to server...</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
     </main>
 
-    <footer class="glass">
-        <p>&copy; 2026 NexusAlloc Framework. Powered by Advanced OS Algorithms.</p>
+    <footer>
+        <div class="footer-inner">
+            <div class="footer-logo"><span class="nexus">Nexus</span><span class="alloc">Alloc</span></div>
+            <p>Integrating OS (Banker's Algorithm) · DBMS (MySQL) · ML (Scikit-Learn) · DAA</p>
+            <p class="footer-sub">© 2026 NexusAlloc Framework. Smart Resource Allocation for Modern Systems.</p>
+        </div>
     </footer>
 
+    <!-- Banker's Algorithm for demo/static mode -->
+    <script>
+        window.BankersLocal = {
+            isSafe(available, max, allocation) {
+                const numP = max.length, numR = available.length;
+                const need = max.map((row, i) => row.map((v, j) => v - allocation[i][j]));
+                const finish = new Array(numP).fill(false);
+                const work = [...available];
+                const seq = [];
+                let count = 0;
+                while (count < numP) {
+                    let found = false;
+                    for (let p = 0; p < numP; p++) {
+                        if (!finish[p] && need[p].every((v, j) => v <= work[j])) {
+                            need[p].forEach((_, k) => work[k] += allocation[p][k]);
+                            finish[p] = true; seq.push(p); found = true; count++;
+                        }
+                    }
+                    if (!found) return { safe: false, sequence: [] };
+                }
+                return { safe: true, sequence: seq };
+            }
+        };
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
